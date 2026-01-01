@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ProjectAkhir</string>
+    <string name="login">Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="log_in">Log In</string>
+    <string name="lupa_password">Lupa password?</string>
+    <string name="atau">atau</string>
+    <string name="buat_akun">Buat Akun</string>
+    <string name="email_tidak_boleh_kosong">Email tidak boleh kosong.</string>
+    <string name="password_tidak_boleh_kosong">Password tidak boleh kosong.</string>
+</resources>
