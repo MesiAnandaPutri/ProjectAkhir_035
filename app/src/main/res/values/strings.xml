@@ -11,4 +11,5 @@
     <string name="password_tidak_boleh_kosong">Password tidak boleh kosong.</string>
     <string name="kelola_produk">Kelola Produk</string>
     <string name="tambah_produk">Tambah Produk Baru</string>
+    <string name="edit_produk">Edit Produk</string>
 </resources>

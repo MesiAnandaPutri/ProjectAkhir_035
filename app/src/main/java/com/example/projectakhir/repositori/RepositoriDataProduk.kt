@@ -1,31 +1,53 @@
 package com.example.projectakhir.repositori
 
-
 import com.example.projectakhir.apiservice.ServiceApiKatalog
-import com.example.projectakhir.modeldata.DataProduk
+import com.example.projectakhir.modeldata.*
 
-// Interface untuk Repositori Produk
 interface RepositoriDataProduk {
+    // Auth
+    suspend fun login(loginRequest: LoginRequest): LoginResponse
+    suspend fun register(registerRequest: RegisterRequest): BaseResponse
+
+    // Produk
+    // PERBAIKAN: Kembalikan List<DataProduk> langsung agar ViewModel tidak perlu tahu tentang ProductResponse
     suspend fun getProduk(): List<DataProduk>
-    suspend fun postProduk(dataProduk: DataProduk)
-    suspend fun getSatuProduk(id: Int): DataProduk
-    suspend fun editSatuProduk(id: Int, dataProduk: DataProduk)
-    suspend fun hapusSatuProduk(id: Int)
+    suspend fun getSatuProduk(id: Int): DataProduk // Kembalikan DataProduk langsung
+    suspend fun postProduk(dataProduk: DataProduk): AddProductResponse
+    suspend fun editSatuProduk(id: Int, dataProduk: DataProduk): BaseResponse
+    suspend fun hapusSatuProduk(id: Int): BaseResponse
+
+    // Transaksi & Restock
+    suspend fun restockProduct(id: Int, qtyIn: Int): BaseResponse
+    suspend fun createTransaction(produkId: Int, userId: Int, qtyOut: Int): TransactionResponse
 }
 
-// Implementasi Repositori yang mengambil data dari network
 class NetworkRepositoriDataProduk(
     private val serviceApiKatalog: ServiceApiKatalog
 ) : RepositoriDataProduk {
-    override suspend fun getProduk(): List<DataProduk> = serviceApiKatalog.getProduk()
-    override suspend fun postProduk(dataProduk: DataProduk) {
-        serviceApiKatalog.postProduk(dataProduk)
+
+    override suspend fun login(loginRequest: LoginRequest) = serviceApiKatalog.login(loginRequest)
+    override suspend fun register(registerRequest: RegisterRequest) = serviceApiKatalog.register(registerRequest)
+
+    // PERBAIKAN: Ambil respons dari API, lalu ekstrak dan kembalikan list .data
+    override suspend fun getProduk(): List<DataProduk> {
+        return serviceApiKatalog.getProduk().data
     }
-    override suspend fun getSatuProduk(id: Int): DataProduk = serviceApiKatalog.getSatuProduk(id)
-    override suspend fun editSatuProduk(id: Int, dataProduk: DataProduk) {
-        serviceApiKatalog.editSatuProduk(id, dataProduk)
+
+    // PERBAIKAN: Ambil respons dari API, lalu ekstrak dan kembalikan objek .data
+    override suspend fun getSatuProduk(id: Int): DataProduk {
+        return serviceApiKatalog.getSatuProduk(id).data
     }
-    override suspend fun hapusSatuProduk(id: Int) {
-        serviceApiKatalog.hapusSatuProduk(id)
+
+    override suspend fun postProduk(dataProduk: DataProduk) = serviceApiKatalog.postProduk(dataProduk)
+    override suspend fun editSatuProduk(id: Int, dataProduk: DataProduk) = serviceApiKatalog.editSatuProduk(id, dataProduk)
+    override suspend fun hapusSatuProduk(id: Int) = serviceApiKatalog.hapusSatuProduk(id)
+
+    override suspend fun restockProduct(id: Int, qtyIn: Int): BaseResponse {
+        return serviceApiKatalog.restockProduct(id, RestockRequest(qtyIn))
+    }
+
+    override suspend fun createTransaction(produkId: Int, userId: Int, qtyOut: Int): TransactionResponse {
+        val request = TransactionRequest(produk_id = produkId, user_id = userId, qty_out = qtyOut)
+        return serviceApiKatalog.createTransaction(request)
     }
 }

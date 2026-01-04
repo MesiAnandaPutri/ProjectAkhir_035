@@ -1,5 +1,6 @@
 package com.example.projectakhir.view
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,7 +33,6 @@ import com.example.projectakhir.modeldata.DetailProduk
 import com.example.projectakhir.ui.theme.ProjectAkhirTheme
 import com.example.projectakhir.viewmodel.EntryViewModel
 import com.example.projectakhir.viewmodel.provider.PenyediaViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun HalamanEntry(
@@ -39,8 +40,9 @@ fun HalamanEntry(
     modifier: Modifier = Modifier,
     entryViewModel: EntryViewModel = viewModel(factory = PenyediaViewModel.Factory)
 ) {
-    val coroutineScope = rememberCoroutineScope()
+    // coroutineScope tidak lagi diperlukan di sini
     val uiState = entryViewModel.uiStateProduk
+    val context = LocalContext.current // Diperlukan untuk menampilkan Toast
 
     Card(
         modifier = modifier
@@ -77,7 +79,7 @@ fun HalamanEntry(
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Buttons
+            // Tombol
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -91,10 +93,17 @@ fun HalamanEntry(
                 }
                 Button(
                     onClick = {
-                        coroutineScope.launch {
-                            entryViewModel.saveProduk()
-                            onNavigateUp() // Kembali setelah menyimpan
-                        }
+                        // PERBAIKAN: Panggil fungsi saveProduk dari ViewModel dengan callbacks
+                        entryViewModel.saveProduk(
+                            onSuccess = {
+                                // Hanya navigasi kembali jika penyimpanan berhasil
+                                onNavigateUp()
+                            },
+                            onError = { errorMessage ->
+                                // Tampilkan pesan error jika gagal
+                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                            }
+                        )
                     },
                     enabled = uiState.isEntryValid, // Tombol aktif jika input valid
                     modifier = Modifier.weight(1f),
@@ -107,6 +116,9 @@ fun HalamanEntry(
         }
     }
 }
+// Sisa kode di HalamanEntry.kt (FormInputProduk, DropdownMenuField, Preview) tidak ada perubahan.
+// ...
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

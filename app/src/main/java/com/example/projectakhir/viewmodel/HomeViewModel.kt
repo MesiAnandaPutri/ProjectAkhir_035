@@ -10,10 +10,8 @@ import com.example.projectakhir.repositori.RepositoriDataProduk
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-// UI State untuk halaman Home
 data class HomeUIState(
-    val listProduk: List<DataProduk> = listOf(),
-    // Tambahkan state lain di sini jika perlu (misal: jumlah transaksi, pendapatan)
+    val listProduk: List<DataProduk> = listOf()
 )
 
 class HomeViewModel(private val repositoriDataProduk: RepositoriDataProduk) : ViewModel() {
@@ -22,19 +20,15 @@ class HomeViewModel(private val repositoriDataProduk: RepositoriDataProduk) : Vi
         private set
 
     init {
-        // Langsung panggil fungsi untuk mengambil data produk saat ViewModel dibuat
         getProduk()
     }
 
     fun getProduk() {
         viewModelScope.launch {
             try {
-                // Mengambil data dari repositori dan memperbarui UI state
-                homeUIState = homeUIState.copy(
-                    listProduk = repositoriDataProduk.getProduk()
-                )
+                // PERBAIKAN: repositori.getProduk() sekarang langsung mengembalikan List<DataProduk>
+                homeUIState = homeUIState.copy(listProduk = repositoriDataProduk.getProduk())
             } catch (e: IOException) {
-                // Handle error (misalnya tampilkan pesan atau state error)
                 e.printStackTrace()
             }
         }

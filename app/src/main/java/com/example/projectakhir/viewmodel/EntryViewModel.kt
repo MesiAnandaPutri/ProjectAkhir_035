@@ -14,11 +14,9 @@ import java.io.IOException
 
 class EntryViewModel(private val repositoriDataProduk: RepositoriDataProduk) : ViewModel() {
 
-    // Menyimpan state dari UI (inputan pengguna)
     var uiStateProduk by mutableStateOf(UIStateProduk())
         private set
 
-    // Fungsi untuk memperbarui state setiap kali ada inputan baru
     fun updateUIState(detailProduk: DetailProduk) {
         uiStateProduk = uiStateProduk.copy(
             detailProduk = detailProduk,
@@ -26,23 +24,41 @@ class EntryViewModel(private val repositoriDataProduk: RepositoriDataProduk) : V
         )
     }
 
-    // Fungsi untuk menyimpan produk baru ke server
-    suspend fun saveProduk() {
-        if (validasiInput()) {
+    /**
+     * PERBAIKAN: Fungsi ini tidak lagi 'suspend'.
+     * Ia akan menangani coroutine-nya sendiri menggunakan viewModelScope
+     * dan menggunakan callbacks untuk berkomunikasi dengan UI.
+     */
+    fun saveProduk(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (!validasiInput()) {
+            onError("Input tidak valid. Harap periksa kembali semua data.")
+            return
+        }
+
+        // Gunakan viewModelScope untuk menjalankan operasi jaringan di background thread.
+        viewModelScope.launch {
             try {
-                repositoriDataProduk.postProduk(uiStateProduk.detailProduk.toDataProduk())
+                // Panggil API untuk menyimpan produk.
+                val response = repositoriDataProduk.postProduk(uiStateProduk.detailProduk.toDataProduk())
+                if (response.success) {
+                    // Jika API mengembalikan sukses, panggil callback onSuccess.
+                    onSuccess()
+                } else {
+                    // Jika API mengembalikan gagal, panggil callback onError dengan pesan dari server.
+                    onError(response.message)
+                }
             } catch (e: IOException) {
-                // Tangani error di sini, misalnya dengan menampilkan pesan
-                e.printStackTrace()
+                // Jika terjadi error koneksi jaringan.
+                onError("Gagal menyimpan data. Periksa koneksi internet Anda.")
+            } catch (e: Exception) {
+                // Untuk error lainnya.
+                onError("Terjadi kesalahan: ${e.message}")
             }
         }
     }
 
-    // Fungsi untuk memvalidasi input
     private fun validasiInput(detailProduk: DetailProduk = uiStateProduk.detailProduk): Boolean {
         return with(detailProduk) {
-            // Validasi sederhana: nama, kategori, dan satuan tidak boleh kosong.
-            // Harga dan stok harus lebih dari 0.
             produk_name.isNotBlank() && kategori.isNotBlank() && unit.isNotBlank() && harga > 0 && stock_qty >= 0
         }
     }

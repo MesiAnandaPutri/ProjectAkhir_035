@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 data class KelolaProdukUIState(
-    val listProduk: List<DataProduk> = listOf()
+    val listProduk: List<DataProduk> = listOf(),
+    val produkForDeletion: DataProduk? = null // Produk yang akan dihapus, null jika tidak ada
 )
 
 class KelolaProdukViewModel(private val repositoriDataProduk: RepositoriDataProduk) : ViewModel() {
@@ -31,6 +32,31 @@ class KelolaProdukViewModel(private val repositoriDataProduk: RepositoriDataProd
                 )
             } catch (e: IOException) {
                 e.printStackTrace()
+            }
+        }
+    }
+    fun setProdukForDeletion(produk: DataProduk) {
+        kelolaProdukUIState = kelolaProdukUIState.copy(produkForDeletion = produk)
+    }
+
+    // --- FUNGSI BARU: Untuk menyembunyikan dialog ---
+    fun dismissDeleteDialog() {
+        kelolaProdukUIState = kelolaProdukUIState.copy(produkForDeletion = null)
+    }
+    fun deleteProduk() {
+        viewModelScope.launch {
+            try {
+                // Pastikan ada produk yang dipilih untuk dihapus
+                kelolaProdukUIState.produkForDeletion?.let { produk ->
+                    repositoriDataProduk.hapusSatuProduk(produk.produk_id)
+                }
+            } catch (e: IOException) {
+                // Handle error
+                e.printStackTrace()
+            } finally {
+                // Setelah selesai, tutup dialog dan muat ulang daftar produk
+                dismissDeleteDialog()
+                getProduk()
             }
         }
     }
